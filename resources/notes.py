@@ -13,6 +13,21 @@ blp = Blueprint("Notes" , __name__ , description="Operation on notes")
 class NotesListResources(MethodView):
     @blp.response(200,NotesSchema(many=True))
     def get(self):
+        tag = request.args.get("tag")
+        notes_list = list(notes.values())
+        
+        if tag:
+            tag = tag.lower()
+            filtered_list = []
+            for note in notes_list:
+                if "tags" in note and isinstance(note["tags"] , list):
+                    if any(t.lower() == tag for t in note["tags"]):
+                        filtered_list.append(note)
+            if not filtered_list:
+                abort(404, message=f"No notes found with tag '{tag}'")    
+        
+            return filtered_list , 200
+        
         return list(notes.values()) , 200
 
     @blp.arguments(NotesSchema)
@@ -23,7 +38,6 @@ class NotesListResources(MethodView):
         today =  datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
         new_note = {**request_data , "note_id" :note_id , "created_at" : today}
         notes[note_id] = new_note
-
 
         return new_note , 201
 
@@ -40,7 +54,6 @@ class NotesResources(MethodView):
     @blp.response(200, NotesSchema)
     def put(self,request_data , note_id):
         
-
         if note_id not in notes:
             abort(404 , message="Note Id not found")
         

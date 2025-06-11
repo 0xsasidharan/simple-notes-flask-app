@@ -5,7 +5,9 @@ class NotesSchema(Schema):
     created_at = fields.Str(dump_only=True)
     title = fields.Str(required=True)
     body = fields.Str()
+    tags = fields.List(fields.Str())
 
 class NoteUpdateSchema(Schema):
     title = fields.Str()
     body = fields.Str()
+    tags = fields.List(fields.Str())
