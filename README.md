@@ -24,10 +24,10 @@ A simple and extendable RESTful API for creating, reading, updating, and deletin
 | 1   | Basic Flask App with GET, POST, DELETE   | ✅ Done   |
 | 2   | Add PUT for updating notes               | ✅ Done   |
 | 3   | Add Search & Filter by tag/query         | ⬜ Pending |
-| 4   | Refactor with Blueprints                 | ⬜ Pending |
-| 5   | Use MethodView Class-Based Views         | ⬜ Pending |
-| 6   | Add Marshmallow Schemas                  | ⬜ Pending |
-| 7   | Switch to Flask-Smorest (Swagger docs)   | ⬜ Pending |
+| 4   | Refactor with Blueprints                 | ✅ Done |
+| 5   | Use MethodView Class-Based Views         | ✅ Done |
+| 6   | Add Marshmallow Schemas                  | ✅ Done |
+| 7   | Switch to Flask-Smorest (Swagger docs)   | ✅ Done |
 | 8   | Add JWT Authentication                   | ⬜ Pending |
 
 
