@@ -37,7 +37,7 @@ This project follows clean backend architecture with proper routing, validation,
 | 6   | Add Marshmallow Schemas                  | ✅ Done   |
 | 7   | Switch to Flask-Smorest (Swagger docs)   | ✅ Done   |
 | 8   | Add Docker Containerization              | ✅ Done   |
-| 9  | Database Inegration                       | ⬜ Pending |
+| 9  | Database Inegration                       | ✅ Done   |
 | 10   | Add JWT Authentication                  | ⬜ Pending |
 
 ---

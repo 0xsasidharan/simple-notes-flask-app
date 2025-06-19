@@ -2,9 +2,9 @@ from flask import request
 from flask.views import MethodView
 from flask_smorest  import Blueprint , abort
 from schemas import NotesSchema , NoteUpdateSchema
-from uuid import uuid4
 from datetime import timezone, datetime
-from db import notes
+from db import db
+from models.notes import NoteModel
 
 blp = Blueprint("Notes" , __name__ , description="Operation on notes")
 
@@ -14,58 +14,86 @@ class NotesListResources(MethodView):
     @blp.response(200,NotesSchema(many=True))
     def get(self):
         tag = request.args.get("tag")
-        notes_list = list(notes.values())
+        notes_list = NoteModel.query.all()
         
         if tag:
             tag = tag.lower()
             filtered_list = []
             for note in notes_list:
-                if "tags" in note and isinstance(note["tags"] , list):
-                    if any(t.lower() == tag for t in note["tags"]):
+                if note.tags and isinstance(note.tags, list):
+                    if any(t.lower() == tag for t in note.tags):
                         filtered_list.append(note)
+
             if not filtered_list:
-                abort(404, message=f"No notes found with tag '{tag}'")    
+                abort(404, message=f"No notes found with tag '{tag}'")
+            return filtered_list
         
-            return filtered_list , 200
-        
-        return list(notes.values()) , 200
+        return notes_list
 
     @blp.arguments(NotesSchema)
     @blp.response(201 , NotesSchema)
     def post(self , request_data):
         
-        note_id = uuid4().hex
         today =  datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
-        new_note = {**request_data , "note_id" :note_id , "created_at" : today}
-        notes[note_id] = new_note
+        
+        
+        new_note = NoteModel(
+            created_at=today,
+            title=request_data.get("title"),
+            body=request_data.get("body"),
+            tags=request_data.get("tags", [])
+        )
+        db.session.add(new_note)
+        try:
+            db.session.commit()
+        except:
+            db.session.rollback()
+            abort(500 , message="Database error while creating note")
+        return new_note
 
-        return new_note , 201
 
-
-@blp.route("/notes/<note_id>")
+@blp.route("/notes/<int:note_id>")
 class NotesResources(MethodView):
     @blp.response(200, NotesSchema)
     def get(self , note_id):
-        if note_id not in notes:
+        note = NoteModel.query.get(note_id)
+        if note is None:
             abort(404 , message="Note Id not found")
-        return notes[note_id] , 200
+        return note
 
     @blp.arguments(NoteUpdateSchema)
     @blp.response(200, NotesSchema)
     def put(self,request_data , note_id):
-        
-        if note_id not in notes:
+        note = NoteModel.query.get(note_id)
+
+        if note is None:
             abort(404 , message="Note Id not found")
         
-        new_note = request_data
-        notes[note_id].update(new_note)
+        if "title" in request_data:
+            note.title = request_data["title"]
+        if "body" in request_data:
+            note.body = request_data["body"]
+        if "tags" in request_data:
+            note.tags = request_data["tags"]        
+        
+        try:
+            db.session.commit()
+        except:
+            db.session.rollback()
+            abort(500 ,message="Database error while creating task" )
 
-        return notes[note_id] , 200
+        return note
 
     @blp.response(200)
     def delete(self , note_id):
-        if note_id not in notes:
+        note = NoteModel.query.get(note_id)
+        if note is None:
             abort(404 , message="Note Id not found")
-    
-        del notes[note_id]
-        return {"message" : "Note deleted successfully"} , 200
+
+        db.session.delete(note)
+        try:
+            db.session.commit()
+        except:
+            db.session.rollback()
+            abort(500, message="Database error while deleting task")
+        return {"message" : "Note has been deleted successfully"}
